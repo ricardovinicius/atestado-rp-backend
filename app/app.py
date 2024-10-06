@@ -1,6 +1,9 @@
+import requests
+
 from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, HTTPException
 from sqlmodel import Session, select
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import create_db_and_tables, engine, get_session
 from app.models import Feedback, Question, User
@@ -12,6 +15,19 @@ async def lifespan(app: FastAPI):
     yield
     
 app = FastAPI(lifespan=lifespan)    
+
+origins = [
+    "http://localhost",
+    "http://localhost:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/user",  response_model = UserPublicSchema)
 async def get_user(*, session: Session = Depends(get_session), username: str): 
@@ -37,3 +53,9 @@ async def add_feedback(*, session: Session = Depends(get_session), feedback: Fee
     session.commit()
     session.refresh(user)
     
+@app.get("/cnes/{cnes}")
+def cnes(cnes: str):
+    url = f"https://apidadosabertos.saude.gov.br/cnes/estabelecimentos/{cnes}"
+    
+    response = requests.get(url)
+    return response.json()

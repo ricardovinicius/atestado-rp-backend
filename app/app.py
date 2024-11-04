@@ -19,6 +19,7 @@ app = FastAPI(lifespan=lifespan)
 origins = [
     "http://localhost",
     "http://localhost:5173",
+    "https://obito-chi.vercel.app"
 ]
 
 app.add_middleware(
